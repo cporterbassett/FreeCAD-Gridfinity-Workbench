@@ -644,13 +644,55 @@ def MakeBaseplateCenterCut(self, obj):
 
     return HM3
 
+def EmptySolid():
+    box = Part.makeBox(1,1,1)
+    return box.cut(box)
+
+def MakeRefinedHoles(self, obj, hole_pos):
+    xtranslate = zeromm
+    ytranslate = zeromm
+    for x in range(obj.xGridUnits):
+        ytranslate = zeromm
+        for y in range(obj.yGridUnits):
+            C1 = Part.makeCylinder(obj.MagnetHoleDiameter, obj.MagnetHoleDepth, App.Vector(-hole_pos,-hole_pos,-obj.TotalHeight), App.Vector(0,0,1))
+            C2 = Part.makeCylinder(obj.MagnetHoleDiameter/2, obj.MagnetHoleDepth, App.Vector(hole_pos,-hole_pos,-obj.TotalHeight), App.Vector(0,0,1))
+            C3 = Part.makeCylinder(obj.MagnetHoleDiameter/2, obj.MagnetHoleDepth, App.Vector(-hole_pos,hole_pos,-obj.TotalHeight), App.Vector(0,0,1))
+            C4 = Part.makeCylinder(obj.MagnetHoleDiameter/2, obj.MagnetHoleDepth, App.Vector(hole_pos,hole_pos,-obj.TotalHeight), App.Vector(0,0,1))
+
+
+            HM1 = Part.Solid.multiFuse(C1,[C2,C3,C4])
+
+
+            HM1.translate(App.Vector(xtranslate,ytranslate,0))
+            if y>0:
+                HM2 = Part.Solid.fuse(HM1,HM2)
+            else:
+                HM2 = HM1
+            ytranslate += obj.GridSize
+        if x>0:
+            HM3 = Part.Solid.fuse(HM3,HM2)
+        else:
+            HM3 = HM2
+        xtranslate += obj.GridSize
+    print("HM3")
+    return HM3
+
+def MakeBottomHoles_(self, obj):
+    hole_pos = obj.GridSize/2-obj.MagnetHoleDistanceFromEdge
+    return MakeRefinedHoles(self, obj, hole_pos)
+
 def MakeBottomHoles(self, obj):
+    print("inside MakeBottomHoles")
     hole_pos = obj.GridSize/2-obj.MagnetHoleDistanceFromEdge
     sq_bridge2_pos = -obj.GridSize/2+obj.MagnetHoleDistanceFromEdge+obj.ScrewHoleDiameter/2
 
     sqbr1_depth = obj.MagnetHoleDepth+obj.SequentialBridgingLayerHeight
     sqbr2_depth = obj.MagnetHoleDepth+obj.SequentialBridgingLayerHeight*2
 
+    if obj.RefinedHoles == True:
+        refinedHoles = MakeRefinedHoles(self, obj, hole_pos)
+
+    print("AAAA")
     xtranslate = zeromm
     ytranslate = zeromm
     if obj.MagnetHoles == True:
@@ -677,6 +719,10 @@ def MakeBottomHoles(self, obj):
             else:
                 HM3 = HM2
             xtranslate += obj.GridSize
+        print("HM3")
+        HM3
+
+    print("BBBB")
 
     xtranslate = zeromm
     ytranslate = zeromm
@@ -704,6 +750,8 @@ def MakeBottomHoles(self, obj):
             else:
                 HS3 = HS2
             xtranslate += obj.GridSize
+
+    print("CCCC")
 
     xtranslate = zeromm
     ytranslate = zeromm
@@ -804,15 +852,25 @@ def MakeBottomHoles(self, obj):
             else:
                 HSQ3 = HSQ2
             xtranslate += obj.GridSize
+    print("DDDD")
+			
 
-    if obj.ScrewHoles == True and obj.MagnetHoles == False:
-        fusetotal = HS3
-    if obj.MagnetHoles == True and obj.ScrewHoles == False:
-        fusetotal = HM3
-    if obj.ScrewHoles == True and obj.MagnetHoles == True:
-        fusetotal = Part.Solid.multiFuse(HM3,[HS3,HSQ3])
+    fuseTotal = EmptySolid()
 
-    return fusetotal
+    print(obj)
+    print("EEEE")
+
+    if obj.RefinedHoles == True: # RefinedHoles not compatible with ScrewHoles or MagnetHoles
+        print("RefinedHoles")
+        fuseTotal = fuseTotal.fuse(refinedHoles)
+    else:
+        if obj.ScrewHoles == True:
+            fuseTotal = fuseTotal.fuse(HS3)
+        if obj.MagnetHoles == True:
+            fuseTotal = fuseTotal.fuse(HM3)
+        if obj.ScrewHoles == True and obj.MagnetHoles == True:
+            fuseTotal = fuseTotal.fuse(HSQ3)
+    return fuseTotal
 
 def MakeEcoBinCut(self, obj):
 

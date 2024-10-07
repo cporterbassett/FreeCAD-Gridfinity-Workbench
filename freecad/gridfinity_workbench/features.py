@@ -102,13 +102,15 @@ class BinBlank(FoundationGridfinity):
         obj.Proxy = self
 
     def add_bin_properties(self, obj):
+        print("inside add_bin_properties")
 
-        obj.addProperty("App::PropertyInteger","xGridUnits","Gridfinity","Length of the edges of the outline").xGridUnits=2
-        obj.addProperty("App::PropertyInteger","yGridUnits","Gridfinity","Height of the extrusion").yGridUnits=2
-        obj.addProperty("App::PropertyInteger","HeightUnits","Gridfinity","height of the bin in units, each is 7 mm").HeightUnits=6
+        obj.addProperty("App::PropertyInteger","xGridUnits","Gridfinity","Length of the edges of the outline").xGridUnits=1
+        obj.addProperty("App::PropertyInteger","yGridUnits","Gridfinity","Height of the extrusion").yGridUnits=1
+        obj.addProperty("App::PropertyInteger","HeightUnits","Gridfinity","height of the bin in units, each is 7 mm").HeightUnits=1
         obj.addProperty("App::PropertyBool","StackingLip","Gridfinity","Toggle the stacking lip on or off").StackingLip=True
         obj.addProperty("App::PropertyBool","MagnetHoles","Gridfinity","Toggle the magnet holes on or off").MagnetHoles = True
-        obj.addProperty("App::PropertyBool","ScrewHoles","Gridfinity","Toggle the screw holes on or off").ScrewHoles = True
+        obj.addProperty("App::PropertyBool","ScrewHoles","Gridfinity","Toggle the screw holes on or off").ScrewHoles = False
+        obj.addProperty("App::PropertyBool","RefinedHoles","Gridfinity",'Toggle the "refined holes" on or off').RefinedHoles = False
 
 
     def add_custom_bin_properties(self, obj):
@@ -149,7 +151,7 @@ class BinBlank(FoundationGridfinity):
         obj.setEditorMode("WallThickness",2)
 
     def generate_gridfinity_shape(self, obj):
-
+        print("inside BinBlank.generate_gridfinity_shape")
         obj.xTotalWidth = obj.xGridUnits*obj.GridSize-obj.Tolerance*2
         obj.yTotalWidth = obj.yGridUnits*obj.GridSize-obj.Tolerance*2
         obj.BaseProfileHeight = obj.BaseProfileBottomChamfer+obj.BaseProfileVerticalSection+obj.BaseProfileTopChamfer
@@ -171,7 +173,7 @@ class BinBlank(FoundationGridfinity):
         if obj.StackingLip == True:
             stacking_lip = MakeStackingLip(self, obj)
             fuse_total = Part.Shape.fuse(stacking_lip,fuse_total)
-        if obj.ScrewHoles == True or obj.MagnetHoles == True:
+        if obj.ScrewHoles or obj.MagnetHoles or obj.RefinedHoles:
             holes = MakeBottomHoles(self, obj)
             fuse_total = Part.Shape.cut(fuse_total, holes)
 
